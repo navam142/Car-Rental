@@ -67,6 +67,9 @@ public class GlobalExceptionHandler {
         if (exception instanceof InvalidCredentialsException) {
             return HttpStatus.UNAUTHORIZED;
         }
+        if (exception instanceof EmailNotVerifiedException) {
+            return HttpStatus.FORBIDDEN;
+        }
         return HttpStatus.BAD_REQUEST;
     }
 

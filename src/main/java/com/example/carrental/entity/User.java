@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -26,6 +28,11 @@ public class User {
     private String email;
 
     private boolean isVerified = false;
+
+    @Column(unique = true)
+    private String verificationToken;
+
+    private LocalDateTime verificationTokenExpiry;
 
     private String password;
 
