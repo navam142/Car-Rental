@@ -50,6 +50,14 @@ public class GlobalExceptionHandler {
                 .body(buildErrorResponse(status, exception.getMessage(), request.getRequestURI(), "INVALID_CREDENTIALS", null));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(IllegalArgumentException exception,
+                                                                  HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status)
+                .body(buildErrorResponse(status, exception.getMessage(), request.getRequestURI(), "BAD_REQUEST", null));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(Exception exception, HttpServletRequest request) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;

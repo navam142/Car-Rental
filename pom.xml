@@ -100,6 +100,12 @@
             <version>0.13.0</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http5</artifactId>
+            <version>2.3.2</version> <!-- Make sure this matches your core version -->
+        </dependency>
     </dependencies>
 
     <build>

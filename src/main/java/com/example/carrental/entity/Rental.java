@@ -1,9 +1,13 @@
 package com.example.carrental.entity;
 
+import com.example.carrental.enums.RentalStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -31,4 +35,15 @@ public class Rental {
 
     @Column(nullable = false)
     private LocalDate endDate;
+
+    @Column(nullable = false)
+    private BigDecimal totalPrice;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RentalStatus status = RentalStatus.PENDING;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 }

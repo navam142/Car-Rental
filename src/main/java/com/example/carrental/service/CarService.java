@@ -13,6 +13,7 @@ import com.example.carrental.mapper.CarMapper;
 import com.example.carrental.repository.CarRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,14 +24,21 @@ public class CarService {
 
     private final CarRepository carRepository;
     private final CarMapper carMapper;
+    private final ImageService imageService;
 
     // ─── Admin: Create a car ───────────────────────────────────────────────────
 
-    public CarResponse createCar(CarRequest request) {
+    public CarResponse createCar(CarRequest request, MultipartFile imageFile) {
         if (carRepository.existsByPlateNumber(request.getPlateNumber())) {
             throw new DuplicateResourceException("Car with plate number " + request.getPlateNumber() + " already exists");
         }
+
+        if (imageFile == null || imageFile.isEmpty()) {
+            throw new IllegalArgumentException("Car image is required");
+        }
+        String imageUrl = imageService.uploadProductImage(imageFile);
         Car car = carMapper.toEntity(request);
+        car.setImageUrl(imageUrl);
         return carMapper.toDto(carRepository.save(car));
     }
 

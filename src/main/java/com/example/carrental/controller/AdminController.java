@@ -3,15 +3,20 @@ package com.example.carrental.controller;
 import com.example.carrental.dto.request.CarRequest;
 import com.example.carrental.dto.request.CarStatusUpdateRequest;
 import com.example.carrental.dto.request.LicenseUpdateRequest;
+import com.example.carrental.dto.request.RentalStatusUpdateRequest;
 import com.example.carrental.dto.response.CarResponse;
+import com.example.carrental.dto.response.RentalResponse;
 import com.example.carrental.dto.response.UserResponse;
 import com.example.carrental.service.CarService;
+import com.example.carrental.service.RentalService;
 import com.example.carrental.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,6 +28,7 @@ public class AdminController {
 
     private final UserService userService;
     private final CarService carService;
+    private final RentalService rentalService;
 
     // --- user management ---
 
@@ -40,9 +46,9 @@ public class AdminController {
 
     // --- car management ---
 
-    @PostMapping("/cars")
-    public ResponseEntity<CarResponse> createCar(@Valid @RequestBody CarRequest carRequest) {
-        return ResponseEntity.status(201).body(carService.createCar(carRequest));
+    @PostMapping(path = "/cars", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CarResponse> createCar(@Valid @RequestPart("car")  CarRequest carRequest, @RequestPart("image") MultipartFile image) {
+        return ResponseEntity.status(201).body(carService.createCar(carRequest, image));
     }
 
     @PutMapping("/cars/{id}")
@@ -63,5 +69,18 @@ public class AdminController {
             @PathVariable Long id,
             @Valid @RequestBody CarStatusUpdateRequest request) {
         return ResponseEntity.ok(carService.updateCarStatus(id, request));
+    }
+
+    // --- rental management ---
+    @GetMapping("/rentals")
+    public ResponseEntity<List<RentalResponse>> getAllRentals() {
+        return ResponseEntity.ok(rentalService.getAllRentals());
+    }
+
+    @PatchMapping("/rentals/{id}/status")
+    public ResponseEntity<RentalResponse> updateRentalStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody RentalStatusUpdateRequest request) {
+        return ResponseEntity.ok(rentalService.updateRentalStatus(id, request));
     }
 }
