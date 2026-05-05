@@ -2,6 +2,7 @@ package com.example.carrental.mapper;
 
 import com.example.carrental.dto.request.CarRequest;
 import com.example.carrental.dto.response.CarResponse;
+import com.example.carrental.dto.response.PublicCarResponse;
 import com.example.carrental.entity.Car;
 import com.example.carrental.enums.CarStatus;
 import org.springframework.stereotype.Component;
@@ -41,4 +42,20 @@ public class CarMapper {
                 .status(car.getStatus())
                 .build();
     }
+
+    public PublicCarResponse toPublicDto(Car car) {
+        return PublicCarResponse.builder()
+                .id(car.getId())
+                .brand(car.getBrand())
+                .model(car.getModel())
+                .year(car.getYear())
+                .color(car.getColor())
+                .seatCount(car.getSeatCount())
+                .pricePerDay(car.getPricePerDay())
+                .imageUrl(car.getImageUrl())
+                .fuelType(car.getFuelType())
+                .category(car.getCategory())
+                .build();
+    }
 }
+

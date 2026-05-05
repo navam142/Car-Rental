@@ -3,6 +3,7 @@ package com.example.carrental.service;
 import com.example.carrental.dto.request.CarRequest;
 import com.example.carrental.dto.request.CarStatusUpdateRequest;
 import com.example.carrental.dto.response.CarResponse;
+import com.example.carrental.dto.response.PublicCarResponse;
 import com.example.carrental.entity.Car;
 import com.example.carrental.enums.CarCategory;
 import com.example.carrental.enums.CarStatus;
@@ -90,7 +91,7 @@ public class CarService {
 
     // ─── User: List available cars with optional filters ──────────────────────
 
-    public List<CarResponse> getAvailableCars(CarCategory category, FuelType fuelType) {
+    public List<PublicCarResponse> getAvailableCars(CarCategory category, FuelType fuelType) {
         List<Car> cars;
 
         if (category != null && fuelType != null) {
@@ -103,18 +104,18 @@ public class CarService {
             cars = carRepository.findByStatus(CarStatus.AVAILABLE);
         }
 
-        return cars.stream().map(carMapper::toDto).toList();
+        return cars.stream().map(carMapper::toPublicDto).toList();
     }
 
     // ─── User: Check availability by date range ────────────────────────────────
 
-    public List<CarResponse> getAvailableCarsByDateRange(LocalDate startDate, LocalDate endDate) {
+    public List<PublicCarResponse> getAvailableCarsByDateRange(LocalDate startDate, LocalDate endDate) {
         if (startDate.isAfter(endDate)) {
             throw new IllegalArgumentException("Start date must be before end date");
         }
         return carRepository.findAvailableCarsByDateRange(startDate, endDate)
                 .stream()
-                .map(carMapper::toDto)
+                .map(carMapper::toPublicDto)
                 .toList();
     }
 

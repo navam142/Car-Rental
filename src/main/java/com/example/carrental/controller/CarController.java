@@ -1,12 +1,14 @@
 package com.example.carrental.controller;
 
 import com.example.carrental.dto.response.CarResponse;
+import com.example.carrental.dto.response.PublicCarResponse;
 import com.example.carrental.enums.CarCategory;
 import com.example.carrental.enums.FuelType;
 import com.example.carrental.service.CarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -21,7 +23,7 @@ public class CarController {
 
     // GET /api/cars?category=SUV&fuelType=PETROL
     @GetMapping
-    public ResponseEntity<List<CarResponse>> getAvailableCars(
+    public ResponseEntity<List<PublicCarResponse>> getAvailableCars(
             @RequestParam(required = false) CarCategory category,
             @RequestParam(required = false) FuelType fuelType) {
         return ResponseEntity.ok(carService.getAvailableCars(category, fuelType));
@@ -29,7 +31,7 @@ public class CarController {
 
     // GET /api/cars/available?startDate=2025-06-01&endDate=2025-06-07
     @GetMapping("/available")
-    public ResponseEntity<List<CarResponse>> getAvailableCarsByDateRange(
+    public ResponseEntity<List<PublicCarResponse>> getAvailableCarsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return ResponseEntity.ok(carService.getAvailableCarsByDateRange(startDate, endDate));
@@ -37,6 +39,7 @@ public class CarController {
 
     // GET /api/cars/{id}
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CarResponse> getCarById(@PathVariable Long id) {
         return ResponseEntity.ok(carService.getCarById(id));
     }
