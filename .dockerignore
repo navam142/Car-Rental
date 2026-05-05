@@ -42,9 +42,7 @@ HELP.md
 docs/
 
 # Docker
-Dockerfile
-docker-compose*.yml
-.dockerignore
+# (Do not ignore Dockerfile or compose files here — they are needed for builds)
 
 # Maven wrapper (we copy it explicitly)
 !.mvn/
