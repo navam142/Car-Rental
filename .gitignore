@@ -52,3 +52,6 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+github_actions_deploy_key
+github_actions_deploy_key.pub
