@@ -48,7 +48,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: "${VITE_API_URL}:http://localhost:8080/api"
+        # Use VITE_API_URL from the .env file if present, otherwise default to http://localhost:8080/api
+        VITE_API_URL: "${VITE_API_URL:-http://localhost:8080/api}"
     container_name: car-rental-frontend
     restart: unless-stopped
     depends_on:

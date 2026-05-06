@@ -28,15 +28,14 @@ jobs:
 
       - name: Create docker-compose override on server (use registry images)
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_SSH_USER }}@${{ secrets.SERVER_HOST }} "cat > ~/docker-compose.override.yml <<EOF
-          version: '3.8'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_SSH_USER }}@${{ secrets.SERVER_HOST }} 'cat > ~/docker-compose.override.yml << '"'"'EOF'"'"'
+          version: '"'"'3.8'"'"'
           services:
             backend:
-              image: navamsharma142/car-rental-backend:${IMAGE_TAG}
-              env_file: - .env
+              image: navamsharma142/car-rental-backend:'"${IMAGE_TAG}"'
             frontend:
-              image: navamsharma142/car-rental-frontend:${IMAGE_TAG}
-          EOF"
+              image: navamsharma142/car-rental-frontend:'"${IMAGE_TAG}"'
+          EOF'
 
       - name: (Optional) Docker Hub login on server
         if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
@@ -45,7 +44,7 @@ jobs:
 
       - name: Pull images and restart stack
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_SSH_USER }}@${{ secrets.SERVER_HOST }} "docker-compose -f ~/docker-compose.yml -f ~/docker-compose.yml pull && docker-compose -f ~/docker-compose.yml -f ~/docker-compose.yml up -d --remove-orphans && docker system prune -f"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_SSH_USER }}@${{ secrets.SERVER_HOST }} "docker-compose -f ~/docker-compose.yml -f ~/docker-compose.override.yml pull && docker-compose -f ~/docker-compose.yml -f ~/docker-compose.override.yml up -d --remove-orphans && docker system prune -f"
 
       - name: Wait for backend to become healthy
         run: |
