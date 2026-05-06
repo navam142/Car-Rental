@@ -33,6 +33,7 @@ jobs:
           services:
             backend:
               image: navamsharma142/car-rental-backend:${IMAGE_TAG}
+              env_file: - .env
             frontend:
               image: navamsharma142/car-rental-frontend:${IMAGE_TAG}
           EOF"
