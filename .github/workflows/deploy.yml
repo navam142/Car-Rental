@@ -16,6 +16,9 @@ jobs:
     environment: production
     env:
       IMAGE_TAG: ${{ github.event.inputs.tag || 'latest' }}
+      # expose Docker Hub secrets as env so we can reference them in `if` expressions
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
     steps:
       - name: Checkout
@@ -32,7 +35,9 @@ jobs:
             "printf 'services:\n  backend:\n    image: navamsharma142/car-rental-backend:${IMAGE_TAG}\n  frontend:\n    image: navamsharma142/car-rental-frontend:${IMAGE_TAG}\n' > /home/ubuntu/app/docker-compose.override.yml"
 
       - name: (Optional) Docker Hub login on server
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+        # `secrets` cannot be referenced directly inside some `if` expressions during workflow parsing
+        # map the secret to `env` above and use `env` here instead.
+        if: ${{ env.DOCKERHUB_USERNAME != '' }}
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_SSH_USER }}@${{ secrets.SERVER_HOST }} "docker login -u '${{ secrets.DOCKERHUB_USERNAME }}' -p '${{ secrets.DOCKERHUB_TOKEN }}' || true"
 
