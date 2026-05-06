@@ -28,14 +28,8 @@ jobs:
 
       - name: Create docker-compose override on server (use registry images)
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_SSH_USER }}@${{ secrets.SERVER_HOST }} 'cat > ~/docker-compose.override.yml << '"'"'EOF'"'"'
-          version: '"'"'3.8'"'"'
-          services:
-            backend:
-              image: navamsharma142/car-rental-backend:'"${IMAGE_TAG}"'
-            frontend:
-              image: navamsharma142/car-rental-frontend:'"${IMAGE_TAG}"'
-          EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_SSH_USER }}@${{ secrets.SERVER_HOST }} \
+            "printf 'services:\n  backend:\n    image: navamsharma142/car-rental-backend:${IMAGE_TAG}\n  frontend:\n    image: navamsharma142/car-rental-frontend:${IMAGE_TAG}\n' > /home/ubuntu/app/docker-compose.override.yml"
 
       - name: (Optional) Docker Hub login on server
         if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
@@ -44,7 +38,7 @@ jobs:
 
       - name: Pull images and restart stack
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_SSH_USER }}@${{ secrets.SERVER_HOST }} "docker-compose -f ~/docker-compose.yml -f ~/docker-compose.override.yml pull && docker-compose -f ~/docker-compose.yml -f ~/docker-compose.override.yml up -d --remove-orphans && docker system prune -f"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_SSH_USER }}@${{ secrets.SERVER_HOST }} "docker-compose -f /home/ubuntu/app/docker-compose.yml -f /home/ubuntu/app/docker-compose.override.yml pull && docker-compose -f /home/ubuntu/app/docker-compose.yml -f /home/ubuntu/app/docker-compose.override.yml up -d --remove-orphans && docker system prune -f"
 
       - name: Wait for backend to become healthy
         run: |
@@ -53,7 +47,7 @@ jobs:
               sleep 5; \
               curl -sSf http://localhost:8080/actuator/health && exit 0 || echo 'waiting...'; \
             done; \
-            echo 'Health check failed' && docker-compose -f ~/docker-compose.yml -f ~/docker-compose.override.yml logs backend --tail=200 && exit 1"
+            echo 'Health check failed' && docker-compose -f /home/ubuntu/app/docker-compose.yml -f /home/ubuntu/app/docker-compose.override.yml logs backend --tail=200 && exit 1"
 
       - name: Deployment complete
         run: echo "Deployed navamsharma142 images with tag ${IMAGE_TAG} to ${{ secrets.SERVER_HOST }}"
