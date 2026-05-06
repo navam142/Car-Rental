@@ -45,7 +45,7 @@ jobs:
 
       - name: Pull images and restart stack
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_SSH_USER }}@${{ secrets.SERVER_HOST }} "docker-compose -f ~/docker-compose.prod.yml -f ~/docker-compose.override.yml pull && docker-compose -f ~/docker-compose.prod.yml -f ~/docker-compose.override.yml up -d --remove-orphans && docker system prune -f"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_SSH_USER }}@${{ secrets.SERVER_HOST }} "docker-compose -f ~/docker-compose.yml -f ~/docker-compose.yml pull && docker-compose -f ~/docker-compose.prod.yml -f ~/docker-compose.yml up -d --remove-orphans && docker system prune -f"
 
       - name: Wait for backend to become healthy
         run: |
