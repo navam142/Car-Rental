@@ -58,6 +58,9 @@ services:
       APP_VERIFICATION_URL: ${APP_VERIFICATION_URL}
       VERIFICATION_TOKEN_EXP_MINUTES: ${VERIFICATION_TOKEN_EXP_MINUTES:-30}
       
+      # CORS Configuration (comma-separated list of allowed origins)
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
+
       # Cloudinary Configuration
       CLOUDINARY_USERNAME: ${CLOUDINARY_USERNAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}

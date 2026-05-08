@@ -1,7 +1,6 @@
 package com.example.carrental.config;
 
 import com.example.carrental.security.JwtAuthenticationFilter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -19,7 +18,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+
 import java.util.List;
 
 @Configuration
@@ -34,14 +33,29 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cars", "/api/cars/available").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cars/*").authenticated()
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/cars",
+                                "/api/cars/available"
+                        ).permitAll()
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/cars/*"
+                        ).authenticated()
+
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/rentals/**").hasAnyRole("USER", "ADMIN")
+
+                        .requestMatchers("/api/rentals/**")
+                        .hasAnyRole("USER", "ADMIN")
+
                         .requestMatchers("/api/users/**").authenticated()
 
-                        .anyRequest().authenticated())
+                        .anyRequest().authenticated()
+                )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
@@ -53,20 +67,47 @@ public class SecurityConfig {
     }
 
 
-    @Value("${app.cors.allowed-origins}")
-    private String corsAllowedOrigin;
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173", "http://13.205.199.62:3000", corsAllowedOrigin)); // Adjust based on your frontend port
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://13.205.199.62",
+                "http://13.205.199.62:3000",
+                "http://car-nvm.servecounterstrike.com",
+                "http://car-nvm.servecounterstrike.com:3000"
+        ));
+
+        configuration.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS",
+                "PATCH"
+        ));
+
         configuration.setAllowedHeaders(List.of("*"));
+
+        configuration.setExposedHeaders(List.of(
+                "Authorization"
+        ));
+
         configuration.setAllowCredentials(true);
+
         configuration.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 }
