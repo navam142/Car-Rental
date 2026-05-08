@@ -25,6 +25,20 @@ jobs:
 
       - name: Build and run tests
         run: ./mvnw -B -DskipTests=false test
+        env:
+          NEONDB_URL: ${{ secrets.NEONDB_URL }}
+          NEONDB_USERNAME: ${{ secrets.NEONDB_USERNAME }}
+          NEONDB_PASSWORD: ${{ secrets.NEONDB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          CORS_ALLOWED_ORIGIN: ${{ secrets.CORS_ALLOWED_ORIGIN }}
+          CLOUDINARY_USERNAME: ${{ secrets.CLOUDINARY_USERNAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
 
   frontend:
     name: Build frontend
