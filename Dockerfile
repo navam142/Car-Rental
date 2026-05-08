@@ -28,7 +28,7 @@ RUN apk add --no-cache curl \
     && adduser -S spring -G spring
 USER spring:spring
 
-# Copy the built jar from build stage
+# Copy the built jar from buld stage
 COPY --from=build /app/target/*.jar app.jar
 
 # Expose port

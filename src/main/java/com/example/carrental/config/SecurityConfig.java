@@ -1,5 +1,5 @@
 package com.example.carrental.config;
-
+import org.springframework.beans.factory.annotation.Value;
 import com.example.carrental.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -66,23 +66,15 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-
-
+    @Value("${app.cors.allowed-origins}")
+    private List<String> allowedOrigins;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "http://13.205.199.62",
-                "http://13.205.199.62:3000",
-                "http://car-nvm.servecounterstrike.com",
-                "http://car-nvm.servecounterstrike.com:3000"
-        ));
+        configuration.setAllowedOrigins(allowedOrigins);
 
         configuration.setAllowedMethods(List.of(
                 "GET",
