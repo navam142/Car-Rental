@@ -1,5 +1,25 @@
 services:
-  # Spring Boot Backend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/api}
+    container_name: car-rental-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8080/api}
+
   backend:
     build:
       context: .
@@ -8,36 +28,12 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    environment:
-      # JWT Configuration
-      JWT_SECRET: ${JWT_SECRET}
-      
-      # Mail Configuration
-      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-      MAIL_FROM: ${MAIL_FROM:-noreply@carrental.com}
-      
-      # Application URLs
-      APP_VERIFICATION_URL: ${APP_VERIFICATION_URL:-http://localhost:3000/auth/verify-email}
-      VERIFICATION_TOKEN_EXP_MINUTES: ${VERIFICATION_TOKEN_EXP_MINUTES:-30}
-      
-      # CORS Configuration (comma-separated list of allowed origins)
-      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
-
-      # Cloudinary Configuration
-      CLOUDINARY_USERNAME: ${CLOUDINARY_USERNAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      
-      # Neon DB Password (application will use URL from application.properties)
-      NEONDB_PASSWORD: ${NEONDB_PASSWORD}
-
     ports:
       - "${BACKEND_PORT:-8080}:8080"
-    networks:
-      - car-rental-network
+    environment:
+      - SPRING_DATASOURCE_URL=${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
@@ -45,31 +41,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # React Frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        # Use VITE_API_URL from the .env file if present, otherwise default to http://localhost:8080/api
-        VITE_API_URL: "${VITE_API_URL:-http://localhost:8080/api}"
-    container_name: car-rental-frontend
-    restart: unless-stopped
-    depends_on:
-      - backend
-    env_file:
-      - .env
-    ports:
-      - "${FRONTEND_PORT:-3000}:80"
-    networks:
-      - car-rental-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 
-networks:
-  car-rental-network:
-    driver: bridge
+volumes:
+  postgres_data:
