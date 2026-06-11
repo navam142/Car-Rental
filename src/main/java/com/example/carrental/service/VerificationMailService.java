@@ -19,7 +19,7 @@ public class VerificationMailService {
     private String verificationUrl;
 
     public void sendVerificationEmail(String to, String token) {
-        String verifyLink = verificationUrl + "?token=" + token;
+        String verifyLink = verificationUrl + "/auth/verify-email" + "?token=" + token;
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromAddress);
