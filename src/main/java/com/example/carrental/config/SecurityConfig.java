@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 
+import java.security.SecureRandom;
 import java.util.List;
 
 @Configuration
@@ -53,6 +54,7 @@ public class SecurityConfig {
                         .hasAnyRole("USER", "ADMIN")
 
                         .requestMatchers("/api/users/**").authenticated()
+                        .requestMatchers("/").permitAll()
 
                         .anyRequest().authenticated()
                 )

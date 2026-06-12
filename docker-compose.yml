@@ -7,6 +7,7 @@ services:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/api}
     container_name: car-rental-frontend
     restart: unless-stopped
+    image : navamsharma142/car-rental-frontend:latest
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
@@ -25,6 +26,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: car-rental-backend
+    image: navamsharma142/car-rental-backend:latest
     restart: unless-stopped
     env_file:
       - .env
