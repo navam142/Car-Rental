@@ -1,293 +1,348 @@
 # 🚗 Car Rental System
 
-A full-stack car rental application with Spring Boot backend and React frontend, containerized with Docker.
+A full-stack car rental application with a Spring Boot backend and React frontend, containerized with Docker and deployed to cloud platforms.
 
 ## 🏗️ Architecture
 
-- **Backend**: Spring Boot 4.0.6 + PostgreSQL + JWT Authentication
-- **Frontend**: React 18 + Vite + React Router + Context API
-- **Infrastructure**: Docker + Docker Compose
-- **Image Storage**: Cloudinary
-- **Email**: SMTP (Gmail/custom)
+| Layer | Technology |
+|-------|------------|
+| Backend | Spring Boot 4.0.6 · Java 17 · Spring Security · JWT |
+| Database | PostgreSQL (NeonDB serverless) · Spring Data JPA · HikariCP |
+| Frontend | React 19 · Vite 8 · React Router 7 · Axios · Context API |
+| Image Storage | Cloudinary (`cloudinary-http5 2.3.2`) |
+| Email | [Resend](https://resend.com) transactional email API |
+| Infrastructure | Docker · Docker Compose · Nginx (frontend container) |
+| CI/CD | GitHub Actions → Docker Hub → self-hosted server (SSH) |
+| Frontend Deploy | Vercel (SPA rewrite via `vercel.json`) |
+
+---
 
 ## 📋 Features
 
 ### User Features
-- User registration with email verification
-- JWT-based authentication
-- Browse available cars with filters (category, fuel type, date range)
+- Registration with email verification (24-hour link via Resend API)
+- JWT-based authentication (Bearer token, configurable expiry)
+- Browse available cars with filters — category and fuel type
+- Date-range availability search
 - Book cars with automatic price calculation
-- View and cancel bookings
-- Profile management with license upload
+- View and cancel own rentals (cancel only while PENDING)
+- Profile management with driver license upload
 
 ### Admin Features
-- Manage cars (CRUD operations with image upload)
-- Manage rentals (approve, confirm, complete)
-- Manage users (approve/reject driver licenses)
-- Update car and rental statuses
+- Full car management — create (with image upload), update, delete, status change
+- Rental management — view all rentals, update status
+- User management — view all users, approve/reject driver licenses
+
+---
 
 ## 🚀 Quick Start with Docker
 
 ### Prerequisites
-- Docker Desktop installed
-- Docker Compose installed
-- Cloudinary account (free tier available)
-- Gmail account with App Password (for email verification)
+- Docker Desktop
+- A [NeonDB](https://neon.tech) (or any PostgreSQL) database
+- A [Resend](https://resend.com) account and API key (free tier available)
+- A [Cloudinary](https://cloudinary.com) account (free tier available)
 
-### 1. Clone and Setup
+### 1. Clone and configure
 
 ```bash
 git clone <your-repo-url>
-cd car-rental
-```
-
-### 2. Configure Environment Variables
-
-Copy the example environment file:
-
-```bash
+cd Car-Rental
 cp .env.example .env
 ```
 
-Edit `.env` and fill in your credentials:
+Edit `.env` and fill in your values:
 
 ```env
-# Database
-POSTGRES_PASSWORD=your_secure_password
+# Database — full JDBC URL (NeonDB example)
+POSTGRES_DB=jdbc:postgresql://<host>/neondb?sslmode=require
+POSTGRES_USERNAME=your_db_user
+POSTGRES_PASSWORD=your_db_password
 
-# JWT Secret (generate a secure random string)
-JWT_SECRET=your_jwt_secret_minimum_256_bits
+# JWT — Base64-encoded secret, minimum 256 bits
+JWT_SECRET=your_base64_jwt_secret
+JWT_EXPIRATION=3600000       # 1 hour in ms (optional)
 
-# Email (Gmail example)
-MAIL_USERNAME=your_email@gmail.com
-MAIL_PASSWORD=your_gmail_app_password
+# Email — Resend API (NOT SMTP)
+RESEND_API_KEY=re_your_resend_api_key
+MAIL_FROM=noreply@yourdomain.com   # must be a verified sender on Resend
+
+# Application URLs
+FRONTEND_URL=http://localhost:3000
+CORS_ALLOWED_ORIGINS=http://localhost:3000
 
 # Cloudinary
 CLOUDINARY_USERNAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+
+# Ports (optional — defaults shown)
+BACKEND_PORT=8080
+FRONTEND_PORT=3000
+VITE_API_URL=http://localhost:8080/api
 ```
 
-#### 📧 Gmail Setup
-1. Enable 2-Factor Authentication on your Google account
-2. Go to [App Passwords](https://myaccount.google.com/apppasswords)
-3. Generate a new app password for "Mail"
-4. Use this password in `MAIL_PASSWORD`
+> **Note:** The `.env.example` mentions `MAIL_HOST` / `MAIL_PASSWORD` SMTP variables — those are outdated. The application uses the **Resend API** (`RESEND_API_KEY`), not SMTP.
 
-#### ☁️ Cloudinary Setup
-1. Sign up at [cloudinary.com](https://cloudinary.com)
-2. Get your credentials from the dashboard
-3. Add them to your `.env` file
-
-### 3. Build and Run
+### 2. Build and run
 
 ```bash
-# Build and start all services
 docker-compose up --build
 
-# Or run in detached mode
+# Or detached
 docker-compose up -d --build
 ```
 
-### 4. Access the Application
+### 3. Access
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8080/api
-- **Database**: localhost:5432
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:8080/api |
+| Health check | http://localhost:8080/actuator/health |
 
-### 5. Create Admin User
+### 4. Create your first admin
 
-The first registered user will be a regular user. To create an admin:
+After registering normally, promote the account to admin via the database:
 
-**Option 1: Via Database**
 ```bash
-# Connect to the database
+# Via Docker (if using a local PostgreSQL container)
 docker exec -it car-rental-db psql -U postgres -d car_rental_db
 
-# Update user role
-UPDATE users SET role = 'ADMIN' WHERE email = 'your_email@example.com';
+# Via NeonDB SQL editor or any psql client
+UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';
 ```
 
-**Option 2: Via Application Code**
-Modify `UserService.java` temporarily to set role as ADMIN for specific email.
+---
 
-## 🛠️ Development
+## 🛠️ Development (without Docker)
 
-### Run Without Docker
+### Backend
 
-#### Backend
 ```bash
-# Set environment variables or use application.properties
-export JWT_SECRET=your_secret
-export MAIL_USERNAME=your_email
-# ... other vars
-
-# Run with Maven
+# Export required environment variables, then:
 ./mvnw spring-boot:run
+
+# or
+make dev-backend
 ```
 
-#### Frontend
+### Frontend
+
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev     # http://localhost:3000
 ```
 
-### Docker Commands
+---
+
+## 🧰 Makefile Reference
 
 ```bash
-# Start services
-docker-compose up
-
-# Stop services
-docker-compose down
-
-# Stop and remove volumes (⚠️ deletes database data)
-docker-compose down -v
-
-# View logs
-docker-compose logs -f
-
-# View specific service logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-
-# Rebuild specific service
-docker-compose up --build backend
-
-# Execute commands in containers
-docker exec -it car-rental-backend bash
-docker exec -it car-rental-db psql -U postgres -d car_rental_db
+make build          # Build all Docker images
+make up             # Start all services (detached)
+make down           # Stop all services
+make restart        # Restart all services
+make logs           # Tail all logs
+make logs-backend   # Tail backend logs
+make logs-frontend  # Tail frontend logs
+make db-shell       # Open psql shell in DB container
+make db-backup      # Dump database to backups/
+make db-restore     # Restore from a backup file
+make clean          # Remove containers and prune
+make clean-all      # Remove everything including volumes ⚠️
+make test-backend   # Run backend tests via Maven
+make dev-backend    # Run backend locally with Maven
+make dev-frontend   # Run frontend locally with Vite
 ```
+
+---
 
 ## 📁 Project Structure
 
 ```
-car-rental/
-├── src/                          # Spring Boot backend
-│   └── main/
-│       ├── java/com/example/carrental/
-│       │   ├── config/          # Security, Cloudinary config
-│       │   ├── controller/      # REST endpoints
-│       │   ├── dto/             # Request/Response objects
-│       │   ├── entity/          # JPA entities
-│       │   ├── repository/      # Data access
-│       │   ├── service/         # Business logic
-│       │   └── security/        # JWT, filters
-│       └── resources/
-│           └── application.properties
-├── frontend/                     # React frontend
+Car-Rental/
+├── src/main/java/com/example/carrental/
+│   ├── config/               # SecurityConfig, CloudinaryConfig, ApplicationConfig
+│   ├── controller/           # REST controllers (Admin, Car, Rental, User)
+│   ├── dto/
+│   │   ├── request/          # CarRequest, RentalRequest, UserRegisterRequest, …
+│   │   └── response/         # CarResponse, PublicCarResponse, RentalResponse, UserResponse
+│   ├── entity/               # Car, Rental, User (JPA entities)
+│   ├── enums/                # CarCategory, CarStatus, FuelType, LicenseStatus,
+│   │                         #   RentalStatus, UserRole
+│   ├── exceptions/           # GlobalExceptionHandler + custom exceptions
+│   ├── mapper/               # CarMapper, RentalMapper, UserMapper
+│   ├── repository/           # CarRepository, RentalRepository, UserRepository
+│   ├── security/             # JwtService, JwtAuthenticationFilter, CustomUserDetails
+│   └── service/              # CarService, ImageService, RentalService,
+│                             #   UserService, VerificationMailService
+├── src/main/resources/
+│   └── application.properties
+├── frontend/
 │   ├── src/
-│   │   ├── api/                 # Axios API clients
-│   │   ├── components/          # Reusable components
-│   │   ├── context/             # Context API state
-│   │   ├── pages/               # Route pages
-│   │   └── App.jsx
-│   ├── Dockerfile
-│   └── nginx.conf
+│   │   ├── api/              # axiosInstance, authApi, carApi, rentalApi, adminApi
+│   │   ├── components/       # Navbar, CarCard, Alert, Spinner, StatusBadge, ProtectedRoute
+│   │   ├── context/          # AuthContext, CarContext, RentalContext
+│   │   └── pages/
+│   │       ├── admin/        # AdminCarsPage, AdminRentalsPage, AdminUsersPage, CarFormModal
+│   │       ├── CarDetailPage, CarsPage, LoginPage, MyRentalsPage,
+│   │       │   ProfilePage, RegisterPage, VerifyEmailPage
+│   ├── nginx.conf            # Nginx config for SPA + security headers
+│   ├── vercel.json           # Vercel SPA rewrite rule
+│   ├── Dockerfile            # Node 20 build → Nginx 1.25 serve
+│   └── vite.config.js
+├── Dockerfile                # Maven 3.9 build → JRE 21-alpine
 ├── docker-compose.yml
-├── Dockerfile
 ├── .env.example
-└── README.md
+├── Makefile
+└── pom.xml
 ```
+
+---
+
+## 🌐 API Endpoints
+
+### Public — no authentication required
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/register` | Register a new user |
+| `POST` | `/api/auth/login` | Login — returns JWT |
+| `GET` | `/api/auth/verify-email?token=` | Verify email address |
+| `POST` | `/api/auth/resend-verification` | Resend verification email |
+| `GET` | `/api/cars` | List available cars (`?category=&fuelType=`) |
+| `GET` | `/api/cars/available` | Date-range search (`?startDate=&endDate=`) |
+
+### Authenticated — `Authorization: Bearer <token>` required
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/cars/{id}` | Car detail |
+| `GET` | `/api/users/me` | Own profile |
+| `PUT` | `/api/users/me` | Update profile |
+| `POST` | `/api/rentals` | Book a car |
+| `GET` | `/api/rentals/my` | Own rental history |
+| `DELETE` | `/api/rentals/{id}` | Cancel rental (PENDING only) |
+
+### Admin only — `ROLE_ADMIN` required
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/admin/users` | List all users |
+| `PUT` | `/api/admin/users/{id}/license` | Approve / reject license |
+| `POST` | `/api/admin/cars` | Create car (`multipart/form-data`: `car` + `image`) |
+| `PUT` | `/api/admin/cars/{id}` | Update car details |
+| `DELETE` | `/api/admin/cars/{id}` | Delete car |
+| `PATCH` | `/api/admin/cars/{id}/status` | Update car status |
+| `GET` | `/api/admin/rentals` | List all rentals |
+| `PATCH` | `/api/admin/rentals/{id}/status` | Update rental status |
+
+---
+
+## 📊 Database Schema
+
+### Entities
+
+**`users`** — `id`, `email`, `password` (BCrypt), `firstName`, `lastName`, `role`, `emailVerified`, `verificationToken`, `licenseImageUrl`, `licenseStatus`
+
+**`cars`** — `id`, `make`, `model`, `year`, `category`, `fuelType`, `pricePerDay`, `status`, `imageUrl`
+
+**`rentals`** — `id`, `user_id`, `car_id`, `startDate`, `endDate`, `totalPrice`, `status`
+
+### Enums
+
+| Enum | Values |
+|------|--------|
+| `UserRole` | `USER`, `ADMIN` |
+| `LicenseStatus` | `PENDING`, `APPROVED`, `REJECTED` |
+| `CarStatus` | `AVAILABLE`, `RENTED`, `MAINTENANCE` |
+| `CarCategory` | `SEDAN`, `SUV`, `HATCHBACK`, `CONVERTIBLE`, `TRUCK`, `VAN`, `COUPE` |
+| `FuelType` | `PETROL`, `DIESEL`, `ELECTRIC`, `HYBRID` |
+| `RentalStatus` | `PENDING`, `CONFIRMED`, `ACTIVE`, `COMPLETED`, `CANCELLED` |
+
+---
 
 ## 🔒 Security
 
-- JWT tokens with configurable expiration
-- Password hashing with BCrypt
-- CORS configuration
-- SQL injection prevention via JPA
-- XSS protection headers in Nginx
+- JWT (HMAC-SHA) with configurable expiration, validated on every request via `JwtAuthenticationFilter`
+- Passwords hashed with BCrypt
+- Role-based access control via `@PreAuthorize` and Spring Security route rules
+- CORS configured via `CORS_ALLOWED_ORIGINS` environment variable
+- Nginx security headers: `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`
 - Non-root Docker containers
-- Environment variable secrets
+- SQL injection prevention via JPA parameterized queries
+
+---
+
+## 📧 Email (Resend API)
+
+The application sends transactional email through the [Resend](https://resend.com) REST API — **not SMTP**.
+
+`VerificationMailService` calls `POST https://api.resend.com/emails` with your `RESEND_API_KEY`. The sender address (`MAIL_FROM`) must be a verified sender or domain on your Resend account. Verification tokens expire after `VERIFICATION_TOKEN_EXP_MINUTES` (default: 30 minutes).
+
+---
+
+## 🚢 Deployment
+
+### CI (GitHub Actions)
+
+Every push and pull request to any branch triggers:
+- **Backend**: Java 17 + Maven, compiles and runs tests against NeonDB (secrets injected)
+- **Frontend**: Node 22, `npm ci && npm run build`, uploads `dist/` as artifact
+
+### CD (GitHub Actions → server)
+
+Pushing to `main` (or manual dispatch):
+1. SSHes into the production server
+2. Creates a `docker-compose.override.yml` pointing to pre-built Docker Hub images (`navamsharma142/car-rental-backend:latest` / `navamsharma142/car-rental-frontend:latest`)
+3. Pulls images and restarts the stack via `docker-compose.prod.yml`
+4. Waits for `/actuator/health` to confirm a healthy deployment
+
+### Frontend (Vercel)
+
+`frontend/vercel.json` rewrites all routes to `/index.html` for client-side routing. Set `VITE_API_URL` in Vercel environment settings to point to your backend.
+
+The current production backend URL is: `https://car-rental-backend-latest-gygt.onrender.com`
+
+---
+
+## 🐛 Troubleshooting
+
+**Backend won't start**
+- Check logs: `make logs-backend` or `docker-compose logs backend`
+- Verify all environment variables in `.env` are set
+- Confirm the database URL is reachable (`POSTGRES_DB`)
+
+**Frontend can't reach the backend**
+- Check `VITE_API_URL` — it must be set at build time for Vite
+- Verify CORS: `CORS_ALLOWED_ORIGINS` must include the frontend origin
+- Test backend directly: `curl http://localhost:8080/actuator/health`
+
+**Email verification not arriving**
+- Confirm `RESEND_API_KEY` is valid
+- Ensure `MAIL_FROM` is a verified sender on your Resend account
+- Check backend logs for HTTP errors from the Resend API call
+- Verify `FRONTEND_URL` is set correctly so the link in the email points to the right address
+
+**Image upload fails**
+- Check Cloudinary credentials (`CLOUDINARY_USERNAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`)
+- Review backend logs for errors from the Cloudinary SDK
+
+---
 
 ## 🧪 Testing
 
 ```bash
-# Backend tests
+# Backend unit/integration tests
 ./mvnw test
-
-# Frontend tests
-cd frontend
-npm test
+# or
+make test-backend
 ```
 
-## 📊 Database Schema
-
-### Main Tables
-- **users**: User accounts with roles and license info
-- **cars**: Car inventory with details and images
-- **rentals**: Booking records with status tracking
-
-### Enums
-- **UserRole**: USER, ADMIN
-- **LicenseStatus**: PENDING, APPROVED, REJECTED
-- **CarStatus**: AVAILABLE, RENTED, MAINTENANCE
-- **CarCategory**: SEDAN, SUV, HATCHBACK, CONVERTIBLE, TRUCK, VAN, COUPE
-- **FuelType**: PETROL, DIESEL, ELECTRIC, HYBRID
-- **RentalStatus**: PENDING, CONFIRMED, ACTIVE, COMPLETED, CANCELLED
-
-## 🌐 API Endpoints
-
-### Public
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login
-- `GET /api/auth/verify-email?token=` - Verify email
-- `GET /api/cars` - Browse available cars
-- `GET /api/cars/available?startDate=&endDate=` - Search by dates
-
-### Authenticated
-- `GET /api/users/me` - Get profile
-- `PUT /api/users/me` - Update profile
-- `GET /api/cars/{id}` - Car details
-- `POST /api/rentals` - Book a car
-- `GET /api/rentals/my` - My rentals
-- `DELETE /api/rentals/{id}` - Cancel rental
-
-### Admin Only
-- `GET /api/admin/users` - List all users
-- `PUT /api/admin/users/{id}/license` - Update license status
-- `POST /api/admin/cars` - Create car (multipart/form-data)
-- `PUT /api/admin/cars/{id}` - Update car
-- `DELETE /api/admin/cars/{id}` - Delete car
-- `PATCH /api/admin/cars/{id}/status` - Update car status
-- `GET /api/admin/rentals` - List all rentals
-- `PATCH /api/admin/rentals/{id}/status` - Update rental status
-
-## 🐛 Troubleshooting
-
-### Backend won't start
-- Check database connection in logs: `docker-compose logs backend`
-- Verify environment variables are set correctly
-- Ensure PostgreSQL is healthy: `docker-compose ps`
-
-### Frontend can't connect to backend
-- Check `VITE_API_URL` in `.env`
-- Verify backend is running: `curl http://localhost:8080/actuator/health`
-- Check CORS configuration in `SecurityConfig.java`
-
-### Email verification not working
-- Verify Gmail App Password is correct
-- Check mail logs: `docker-compose logs backend | grep mail`
-- Ensure `APP_VERIFICATION_URL` points to frontend
-
-### Image upload fails
-- Verify Cloudinary credentials
-- Check file size limits
-- Review backend logs for Cloudinary errors
+---
 
 ## 📝 License
 
 This project is licensed under the MIT License.
-
-## 👥 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
-
-## 📧 Support
-
-For issues and questions, please open a GitHub issue.
